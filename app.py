@@ -7,81 +7,202 @@ from resume_analyzer import (
 )
 
 
-# Page settings
+# --------------------------------------------------
+# PAGE CONFIGURATION
+# --------------------------------------------------
+
 st.set_page_config(
     page_title="AI Resume Analyzer",
-    page_icon="📄",
+    page_icon="🤖",
     layout="wide"
 )
 
 
-# Title
-st.title("🤖 AI Resume Analyzer")
+# --------------------------------------------------
+# CUSTOM CSS
+# --------------------------------------------------
 
-st.write(
-    "Upload your resume and compare it with a job description."
+st.markdown("""
+<style>
+
+.main-title {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.section-title {
+    font-size: 25px;
+    font-weight: 650;
+    margin-top: 30px;
+}
+
+.skill-box {
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin: 5px 0;
+    background-color: #f5f7fa;
+    border: 1px solid #e2e5e9;
+}
+
+.footer {
+    text-align: center;
+    color: #777;
+    margin-top: 50px;
+    padding: 20px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# --------------------------------------------------
+# HEADER
+# --------------------------------------------------
+
+st.markdown(
+    '<div class="main-title">🤖 AI Resume Analyzer</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="subtitle">'
+    'Analyze your resume and compare it with a job description using AI-powered skill matching.'
+    '</div>',
+    unsafe_allow_html=True
 )
 
 
-# Resume upload
-uploaded_file = st.file_uploader(
-    "📄 Upload your Resume PDF",
-    type=["pdf"]
+st.divider()
+
+
+# --------------------------------------------------
+# INPUT SECTION
+# --------------------------------------------------
+
+col1, col2 = st.columns(2)
+
+
+with col1:
+
+    st.subheader("📄 Upload Resume")
+
+    uploaded_file = st.file_uploader(
+        "Upload your Resume PDF",
+        type=["pdf"]
+    )
+
+
+with col2:
+
+    st.subheader("💼 Job Description")
+
+    job_description = st.text_area(
+        "Paste the job description",
+        height=220,
+        placeholder=(
+            "Example:\n"
+            "We are looking for a Python Developer with "
+            "knowledge of Python, SQL, Pandas, NumPy..."
+        )
+    )
+
+
+st.write("")
+
+
+# --------------------------------------------------
+# ANALYZE BUTTON
+# --------------------------------------------------
+
+analyze = st.button(
+    "🔍 Analyze Resume",
+    use_container_width=True
 )
 
 
-# Job description
-job_description = st.text_area(
-    "💼 Paste Job Description",
-    height=250,
-    placeholder="Paste the complete job description here..."
-)
+if analyze:
 
-
-# Analyze button
-if st.button("🔍 Analyze Resume"):
+    # --------------------------------------------------
+    # VALIDATION
+    # --------------------------------------------------
 
     if uploaded_file is None:
-        st.warning("Please upload a PDF resume.")
+
+        st.warning(
+            "⚠️ Please upload your resume PDF first."
+        )
 
     elif not job_description.strip():
-        st.warning("Please paste a job description.")
+
+        st.warning(
+            "⚠️ Please paste a job description first."
+        )
 
     else:
 
-        # Extract resume text
-        resume_text = extract_text_from_pdf(uploaded_file)
+        # --------------------------------------------------
+        # EXTRACT RESUME TEXT
+        # --------------------------------------------------
+
+        with st.spinner("🔄 Analyzing your resume..."):
+
+            resume_text = extract_text_from_pdf(
+                uploaded_file
+            )
 
         if not resume_text.strip():
+
             st.error(
-                "Could not extract text from this PDF. "
-                "Please use a text-based PDF."
+                "❌ Could not extract text from this PDF. "
+                "Please upload a text-based PDF."
             )
 
         else:
 
-            st.success("Resume analyzed successfully! 🎉")
-
-
-            # Detect skills
-            resume_skills = detect_skills(resume_text)
-
-
-            # Compare resume with job
-            score, matched, missing = compare_resume_with_job(
-                resume_text,
-                job_description
+            st.success(
+                "✅ Resume analyzed successfully!"
             )
 
 
-            # Results
-            st.subheader("📊 Resume Analysis")
+            # --------------------------------------------------
+            # ANALYSIS
+            # --------------------------------------------------
 
+            resume_skills = detect_skills(
+                resume_text
+            )
+
+            score, matched, missing = (
+                compare_resume_with_job(
+                    resume_text,
+                    job_description
+                )
+            )
+
+
+            # --------------------------------------------------
+            # SCORE
+            # --------------------------------------------------
+
+            st.markdown(
+                '<div class="section-title">'
+                '📊 Resume Match Analysis'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
             col1, col2, col3 = st.columns(3)
 
 
             with col1:
+
                 st.metric(
                     "🎯 Match Score",
                     f"{score}%"
@@ -89,6 +210,7 @@ if st.button("🔍 Analyze Resume"):
 
 
             with col2:
+
                 st.metric(
                     "✅ Matched Skills",
                     len(matched)
@@ -96,64 +218,129 @@ if st.button("🔍 Analyze Resume"):
 
 
             with col3:
+
                 st.metric(
                     "❌ Missing Skills",
                     len(missing)
                 )
 
 
-            # Detected skills
-            st.subheader("🧠 Skills Found in Resume")
+            # Progress bar
+
+            st.progress(
+                score / 100,
+                text=f"Resume Match: {score}%"
+            )
+
+
+            # --------------------------------------------------
+            # SKILLS FOUND
+            # --------------------------------------------------
+
+            st.markdown(
+                '<div class="section-title">'
+                '🧠 Skills Found in Resume'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
 
             if resume_skills:
 
-                st.write(", ".join(resume_skills))
+                skills_text = " • ".join(
+                    resume_skills
+                )
+
+                st.info(
+                    skills_text
+                )
 
             else:
 
-                st.info("No known skills detected.")
+                st.warning(
+                    "No known skills were detected."
+                )
 
 
-            # Matched skills
-            st.subheader("✅ Matched Skills")
+            # --------------------------------------------------
+            # MATCHED SKILLS
+            # --------------------------------------------------
+
+            st.markdown(
+                '<div class="section-title">'
+                '✅ Matched Skills'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
 
             if matched:
 
                 for skill in matched:
-                    st.write(f"✓ {skill}")
+
+                    st.success(
+                        f"✓ {skill}"
+                    )
 
             else:
 
-                st.write("No matching skills found.")
+                st.info(
+                    "No matching skills found."
+                )
 
 
-            # Missing skills
-            st.subheader("❌ Missing Skills")
+            # --------------------------------------------------
+            # MISSING SKILLS
+            # --------------------------------------------------
+
+            st.markdown(
+                '<div class="section-title">'
+                '❌ Missing Skills'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
 
             if missing:
 
                 for skill in missing:
-                    st.write(f"• {skill}")
+
+                    st.warning(
+                        f"• {skill}"
+                    )
 
             else:
 
                 st.success(
-                    "No major missing skills detected!"
+                    "🎉 No major missing skills detected!"
                 )
 
 
-            # Suggestions
-            st.subheader("💡 Suggestions")
+            # --------------------------------------------------
+            # SUGGESTIONS
+            # --------------------------------------------------
+
+            st.markdown(
+                '<div class="section-title">'
+                '💡 Resume Improvement Suggestions'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
 
             if missing:
 
                 st.write(
-                    "Consider learning or demonstrating "
-                    "these skills in your projects:"
+                    "Consider learning these skills "
+                    "and adding relevant projects or "
+                    "experience to your resume:"
                 )
 
                 for skill in missing:
-                    st.write(f"👉 {skill}")
+
+                    st.write(
+                        f"👉 Learn / demonstrate **{skill}**"
+                    )
 
             else:
 
@@ -163,7 +350,26 @@ if st.button("🔍 Analyze Resume"):
                 )
 
 
-            # Resume text
-            with st.expander("📄 View Extracted Resume Text"):
+            # --------------------------------------------------
+            # EXTRACTED TEXT
+            # --------------------------------------------------
 
-                st.text(resume_text)
+            with st.expander(
+                "📄 View Extracted Resume Text"
+            ):
+
+                st.text(
+                    resume_text
+                )
+
+
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
+
+st.markdown(
+    '<div class="footer">'
+    '🤖 AI Resume Analyzer • Built with Python + Streamlit'
+    '</div>',
+    unsafe_allow_html=True
+)
