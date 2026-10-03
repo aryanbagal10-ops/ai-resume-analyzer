@@ -24,8 +24,8 @@ An AI-powered web application built with Python and Streamlit that analyzes resu
 - Python
 - Streamlit
 - PyPDF2
-- scikit-learn
-- Pandas
+
+
 - Git
 - GitHub
 
@@ -60,4 +60,4 @@ ai-resume-analyzer/
 ├── resume_analyzer.py
 ├── requirements.txt
 ├── .gitignore
-└── README.md￼Enter
+└── README.md
