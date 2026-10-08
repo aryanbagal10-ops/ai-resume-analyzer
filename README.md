@@ -61,3 +61,6 @@ ai-resume-analyzer/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
+## 📸 Application Preview
+
+![AI Resume Analyzer Result](resume-analyzer-result.png)
